@@ -1,4 +1,4 @@
-function [ EEGdata , STIMdata , VOLdata ] = ImportBinaryFile( filenameNoExtensionNoPath , pathOfFiles )
+function [ EEGdata , STIMdata , VOLdata, infos ] = ImportBinaryFile( filenameNoExtensionNoPath , pathOfFiles )
 %%IMPORTBINARYFILE read a binary file from BrainVisionAnalyzer2
 %
 % The function uses .dat .vhdr .vmrk, optimized for 64 channels EEG data
@@ -58,10 +58,17 @@ fclose(fileID);
 % Fetch the number of samples
 osef1 = regexp(fileContent, 'DataPoints=(\d*)','tokens','once');
 DataPoints = str2double( osef1{1} );
+infos.DataPoints = DataPoints;
 
 % Fetch the number of channels
 osef2 = regexp(fileContent, 'NumberOfChannels=(\d*)','tokens','once');
 NrChannels = str2double( osef2{1} );
+infos.NrChannels = NrChannels;
+
+% Fetch the sampling interval
+osef3 = regexp(fileContent, 'SamplingInterval=(\d*)','tokens','once'); % in microsecond (µs)
+SamplingInterval = str2double( osef3{1} )/1e6; % convert to second
+infos.SamplingInterval = SamplingInterval;
 
 
 %% Import the .dat
@@ -76,7 +83,7 @@ end
 
 EEGdata  = single(zeros(NrChannels,DataPoints));
 STIMdata = uint8(zeros(1,DataPoints));
-VOLdata  = false(zeros(1,DataPoints));
+VOLdata  = false(size(STIMdata));
 
 EEGdata(1:NrChannels,:) = fread(fileID,[NrChannels DataPoints],'float32');
 fclose(fileID);
