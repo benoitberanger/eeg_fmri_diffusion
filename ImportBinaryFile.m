@@ -81,8 +81,8 @@ if fileID < 3
     error('%s could not be open',fileName)
 end
 
-EEGdata  = single(zeros(NrChannels,DataPoints));
-STIMdata = uint8(zeros(1,DataPoints));
+EEGdata  = zeros(NrChannels,DataPoints,'single');
+STIMdata = zeros(1,DataPoints,'uint8');
 VOLdata  = false(size(STIMdata));
 
 EEGdata(1:NrChannels,:) = fread(fileID,[NrChannels DataPoints],'float32');

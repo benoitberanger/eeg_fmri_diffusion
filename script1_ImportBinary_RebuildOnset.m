@@ -41,7 +41,7 @@ if isempty(runList)
 end
 
 
-%% Load files & segement them
+%% Load files & add onset time series
 
 for f = 1 : length(runList)
     
