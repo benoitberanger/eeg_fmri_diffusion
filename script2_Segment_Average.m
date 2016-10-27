@@ -69,49 +69,102 @@ Mean_baseline_Horizontal_Checkerboard = mean(Segments_Horizontal_Checkerboard(:,
 Mean_baseline_Horizontal_Checkerboard = repmat(Mean_baseline_Horizontal_Checkerboard,[1 size(Segments_Horizontal_Checkerboard,2), 1 ]);
 
 unfiltered_Horizontal_Checkerboard = Segments_Horizontal_Checkerboard - Mean_baseline_Horizontal_Checkerboard;
-
-%% mean
-
 mean_unfiltered_Horizontal_Checkerboard = mean(unfiltered_Horizontal_Checkerboard,3);
 
 
-%%
+%% BP filter : 1-40Hz
+
+filtered_Horizontal_Checkerboard = zeros(size(unfiltered_Horizontal_Checkerboard),'single');
 
 Hd = bp_eeg;
 
-filtered_Horizontal_Checkerboard = zeros(size(unfiltered_Horizontal_Checkerboard),'single');
+
 
 for trial = 1 : size(unfiltered_Horizontal_Checkerboard,3)
     
     fprintf('filtering trial %d \n',trial)
+    
+    %     filtered_Horizontal_Checkerboard(:,:,trial) = fliplr(filter(Hd,fliplr(unfiltered_Horizontal_Checkerboard(:,:,trial))')');
     filtered_Horizontal_Checkerboard(:,:,trial) = filter(Hd,unfiltered_Horizontal_Checkerboard(:,:,trial)')';
     
 end
+
+
+%% Mean
+
+mean_filtered_lHorizontal_Checkerboard = mean(filtered_Horizontal_Checkerboard,3);
+
+
+%%
+
+channel = 20;
+
+
+if 0
+    %%
+    
+    close all
+    figure
+    
+    hold all
+    for p = 1 : size(Segments_Horizontal_Checkerboard,3)
+        plot(Segments_Horizontal_Checkerboard(channel,:,p),'DisplayName',num2str(p))
+    end
+    
+end
+
 
 if 0
     %%
     close all
     figure
     
-    chan = 20;
-    
     subplot(2,1,1)
     hold all
     for p = 1 : size(Segments_Horizontal_Checkerboard,3)
-        plot(Segments_Horizontal_Checkerboard(chan,:,p),'DisplayName',num2str(p))
+        plot(unfiltered_Horizontal_Checkerboard(channel,:,p),'DisplayName',num2str(p))
     end
     
     subplot(2,1,2)
     hold all
     for p = 1 : size(Segments_Horizontal_Checkerboard,3)
-        plot(filtered_Horizontal_Checkerboard(chan,:,p),'DisplayName',num2str(p))
+        plot(filtered_Horizontal_Checkerboard(channel,:,p),'DisplayName',num2str(p))
     end
     
 end
 
+
 if 0
     %%
     close all
+    
+    plotFFT(mean_unfiltered_Horizontal_Checkerboard(channel,:),1000,[1 80])
+    plotFFT(mean_filtered_Horizontal_Checkerboard(channel,:),1000,[1 80])
+    
+    
+end
+
+
+if 0
+    %%
+    
+    close all
+    
     figure
-    plot(Mean_unfiltered_Horizontal_Checkerboard(20,:))
+    hold all
+    for m = 1 : size(mean_unfiltered_Horizontal_Checkerboard,1)
+        if m ~= 32 % ECG
+            plot(mean_unfiltered_Horizontal_Checkerboard(m,:),'DisplayName',num2str(p))
+        end
+    end
+    
+    
+    figure
+    hold all
+    for m = 1 : size(mean_filtered_lHorizontal_Checkerboard,1)
+        if m ~= 32 % ECG
+            plot(mean_filtered_lHorizontal_Checkerboard(m,:),'DisplayName',num2str(p))
+        end
+    end
+    
 end

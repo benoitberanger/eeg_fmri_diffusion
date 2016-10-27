@@ -13,18 +13,20 @@ function Hd = bp_eeg
 % All frequency values are in Hz.
 Fs = 1000;  % Sampling Frequency
 
-Fstop1 = 0.001;       % First Stopband Frequency
+Fstop1 = 0.9;       % First Stopband Frequency
 Fpass1 = 1;           % First Passband Frequency
 Fpass2 = 40;          % Second Passband Frequency
-Fstop2 = 45;          % Second Stopband Frequency
-Astop1 = 60;          % First Stopband Attenuation (dB)
-Apass  = 1;           % Passband Ripple (dB)
-Astop2 = 200;         % Second Stopband Attenuation (dB)
+Fstop2 = 41;          % Second Stopband Frequency
+Astop1 = 120;          % First Stopband Attenuation (dB)
+Apass  = 0.001;           % Passband Ripple (dB)
+Astop2 = 120;         % Second Stopband Attenuation (dB)
 match  = 'passband';  % Band to match exactly
 
 % Construct an FDESIGN object and call its BUTTER method.
 h  = fdesign.bandpass(Fstop1, Fpass1, Fpass2, Fstop2, Astop1, Apass, ...
                       Astop2, Fs);
-Hd = design(h, 'butter', 'MatchExactly', match);
+Hd = design(h, 'IIR', 'MatchExactly', match);
 
 % [EOF]
+
+% fvtool(Hd)
