@@ -47,11 +47,12 @@ Window.Time = [ -0.100 ; +1.600+0.500 ];
 SamplingFrequency = 1000;
 Window.Sample = Window.Time * SamplingFrequency;
 
-%% Load files & add onset time series
 
+%% Horizontal
+
+% Load files & add onset time series
 
 Segments_Horizontal_Checkerboard = [];
-Segments_Vertical_Checkerboard = [];
 
 for f = 1 : length(runList)
     
@@ -62,24 +63,16 @@ for f = 1 : length(runList)
     Segments_Horizontal_Checkerboard = cat( 3 , Segments_Horizontal_Checkerboard , Segments);
     
 end
-
 Segments_Horizontal_Checkerboard(:,:,21) = [];
-
 Mean_baseline_Horizontal_Checkerboard = mean(Segments_Horizontal_Checkerboard(:,1:abs(Window.Sample),:),2);
 Mean_baseline_Horizontal_Checkerboard = repmat(Mean_baseline_Horizontal_Checkerboard,[1 size(Segments_Horizontal_Checkerboard,2), 1 ]);
-
 unfiltered_Horizontal_Checkerboard = Segments_Horizontal_Checkerboard - Mean_baseline_Horizontal_Checkerboard;
 mean_unfiltered_Horizontal_Checkerboard = mean(unfiltered_Horizontal_Checkerboard,3);
 
 
-%% BP filter : 1-40Hz
-
+% BP filter : 1-40Hz
 filtered_Horizontal_Checkerboard = zeros(size(unfiltered_Horizontal_Checkerboard),'single');
-
 Hd = bp_eeg;
-
-
-
 for trial = 1 : size(unfiltered_Horizontal_Checkerboard,3)
     
     fprintf('filtering trial %d \n',trial)
@@ -90,9 +83,54 @@ for trial = 1 : size(unfiltered_Horizontal_Checkerboard,3)
 end
 
 
-%% Mean
-
+% Mean
 mean_filtered_lHorizontal_Checkerboard = mean(filtered_Horizontal_Checkerboard,3);
+
+
+%% Vertical
+
+% Load files & add onset time series
+
+Segments_Vertical_Checkerboard = [];
+
+for f = 1 : length(runList)
+    
+    % Echo in CommandWindow
+    fprintf('segmentation of %s \n',runList{f,1})
+    
+    [ Segments ] = SegmentCondition( runList{f,1} , 2 , Window.Sample(1) , Window.Sample(2) );
+    Segments_Vertical_Checkerboard = cat( 3 , Segments_Vertical_Checkerboard , Segments);
+    
+end
+Segments_Vertical_Checkerboard(:,:,21) = [];
+Mean_baseline_Vertical_Checkerboard = mean(Segments_Vertical_Checkerboard(:,1:abs(Window.Sample),:),2);
+Mean_baseline_Vertical_Checkerboard = repmat(Mean_baseline_Vertical_Checkerboard,[1 size(Segments_Vertical_Checkerboard,2), 1 ]);
+unfiltered_Vertical_Checkerboard = Segments_Vertical_Checkerboard - Mean_baseline_Vertical_Checkerboard;
+mean_unfiltered_Vertical_Checkerboard = mean(unfiltered_Vertical_Checkerboard,3);
+
+
+% BP filter : 1-40Hz
+filtered_Vertical_Checkerboard = zeros(size(unfiltered_Vertical_Checkerboard),'single');
+Hd = bp_eeg;
+for trial = 1 : size(unfiltered_Vertical_Checkerboard,3)
+    
+    fprintf('filtering trial %d \n',trial)
+    
+    %     filtered_Vertical_Checkerboard(:,:,trial) = fliplr(filter(Hd,fliplr(unfiltered_Vertical_Checkerboard(:,:,trial))')');
+    filtered_Vertical_Checkerboard(:,:,trial) = filter(Hd,unfiltered_Vertical_Checkerboard(:,:,trial)')';
+    
+end
+
+
+% Mean
+mean_filtered_lVertical_Checkerboard = mean(filtered_Vertical_Checkerboard,3);
+
+
+%% Save
+
+save('benoit2brainstorm',...
+    'Segments_Horizontal_Checkerboard','unfiltered_Horizontal_Checkerboard','mean_unfiltered_Horizontal_Checkerboard','filtered_Horizontal_Checkerboard','filtered_Horizontal_Checkerboard',...
+    'Segments_Vertical_Checkerboard','unfiltered_Vertical_Checkerboard','mean_unfiltered_Vertical_Checkerboard','filtered_Vertical_Checkerboard','filtered_Vertical_Checkerboard')
 
 
 %%
