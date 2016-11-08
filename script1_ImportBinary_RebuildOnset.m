@@ -75,16 +75,19 @@ for f = 1 : length(runList)
     save(runList{f},'EEGdata','STIMdata','VOLdata','infos','ONSETdata','S')
     
     
-%     figure
-%     AX(1) = subplot(4,1,1);
-%     plot(EEGdata(20,:))
-%     AX(2) = subplot(4,1,2);
-%     plot(STIMdata)
-%     AX(3) = subplot(4,1,3);
-%     plot(VOLdata)
-%     AX(4) = subplot(4,1,4);
-%     plot(ONSETdata)
-%     linkaxes(AX,'x')
     
     
 end
+
+
+figure
+AX(1) = subplot(4,1,1);
+plot(EEGdata(20,:))
+AX(2) = subplot(4,1,2);
+plot(STIMdata)
+AX(3) = subplot(4,1,3);
+plot(VOLdata)
+AX(4) = subplot(4,1,4);
+plot(ONSETdata)
+linkaxes(AX,'x')
+

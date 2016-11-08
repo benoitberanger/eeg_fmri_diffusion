@@ -15,9 +15,12 @@ if ~exist(path_to_matfile,'dir')
 end
 
 % Fetch the list
-runList = getAllFilesWithExtention(path_to_matfile, '*.mat', 0);
+% runList = getAllFilesWithExtention(path_to_matfile, '*.mat', 0);
+runList = regexpdir(path_to_matfile, '^DEV', 0);
 if isempty(runList)
-    error('no .mat file found in %s',path_to_matfile)
+    error('no file found in %s',path_to_matfile)
+else
+    disp(runList)
 end
 
 % Take out the extension
@@ -31,112 +34,127 @@ end
 StimConditions = {
     'Horizontal_Checkerboard';
     'Vertical_Checkerboard';
-    %     'Right_Audio_Click';
-    %     'Left_Audio_Click';
-    %     'Right_Video_Click';
-    %     'Left_Video_Click';'Audio_Computation';
-    %     'Video_Computation';
-    %     'Video_Sentences';
-    %     'Audio_Sentences';
-    %     'Cross_Rest';
-    %     'CLICK_right';
-    %     'CLICK_left';
+    'Right_Audio_Click';
+    'Left_Audio_Click';
+    'Right_Video_Click';
+    'Left_Video_Click';
+    'Audio_Computation';
+    'Video_Computation';
+    'Video_Sentences';
+    'Audio_Sentences';
+    'Cross_Rest';
+    'CLICK_right';
+    'CLICK_left';
     };
 
-Window.Time = [ -0.100 ; +1.600+0.500 ];
+% Window.Time = [ -0.100 ; +1.600+0.500 ];
+Window.Time = [
+    -0.100 , +1.600+0.500 ; % Horizontal_Checkerboard
+    -0.100 , +1.600+0.500 ; % Vertical_Checkerboard
+    -0.100 , +2.200+0.500 ; % Right_Audio_Click
+    -0.100 , +2.200+0.500 ; % Left_Audio_Click
+    -0.100 , +2.200+0.500 ; % Right_Video_Click
+    -0.100 , +2.200+0.500 ; % Left_Video_Click
+    -0.100 , +2.200+0.500 ; % Audio_Computation
+    -0.100 , +1.400+0.500 ; % Video_Computation
+    -0.100 , +1.400+0.500 ; % Video_Sentences
+    -0.100 , +2.200+0.500 ; % Audio_Sentences
+    -0.100 , +2.200+0.500 ; % Cross_Rest
+    -0.100 , +0.000+0.500 ; % CLICK_right
+    -0.100 , +0.000+0.500 ; % CLICK_left
+    ]; % second
+
 SamplingFrequency = 1000;
 Window.Sample = Window.Time * SamplingFrequency;
 
 
-%% Horizontal
+%% Segment and filter conditions
 
 % Load files & add onset time series
 
-Segments_Horizontal_Checkerboard = [];
+allCond = struct;
 
-for f = 1 : length(runList)
+for cond = 1 : length(StimConditions)
     
     % Echo in CommandWindow
-    fprintf('segmentation of %s \n',runList{f,1})
+    fprintf('Conditin %s , %d \n',StimConditions{cond},cond)
     
-    [ Segments ] = SegmentCondition( runList{f,1} , 1 , Window.Sample(1) , Window.Sample(2) );
-    Segments_Horizontal_Checkerboard = cat( 3 , Segments_Horizontal_Checkerboard , Segments);
+    allCond.(StimConditions{cond}).rawSegments = [];
     
-end
-Segments_Horizontal_Checkerboard(:,:,21) = [];
-Mean_baseline_Horizontal_Checkerboard = mean(Segments_Horizontal_Checkerboard(:,1:abs(Window.Sample),:),2);
-Mean_baseline_Horizontal_Checkerboard = repmat(Mean_baseline_Horizontal_Checkerboard,[1 size(Segments_Horizontal_Checkerboard,2), 1 ]);
-unfiltered_Horizontal_Checkerboard = Segments_Horizontal_Checkerboard - Mean_baseline_Horizontal_Checkerboard;
-mean_unfiltered_Horizontal_Checkerboard = mean(unfiltered_Horizontal_Checkerboard,3);
-
-
-% BP filter : 1-40Hz
-filtered_Horizontal_Checkerboard = zeros(size(unfiltered_Horizontal_Checkerboard),'single');
-Hd = bp_eeg;
-for trial = 1 : size(unfiltered_Horizontal_Checkerboard,3)
+    for f = 1 : length(runList)
+        
+        % Echo in CommandWindow
+        fprintf('segmentation of %s \n',runList{f,1})
+        
+        [ rawSegments ] = SegmentCondition( runList{f,1} , cond , Window.Sample(cond,1) , Window.Sample(cond,2) );
+        allCond.(StimConditions{cond}).rawSegments = cat( 3 , allCond.(StimConditions{cond}).rawSegments , rawSegments);
+        
+    end
+    %     allCond.(StimConditions{cond}).rawSegments(:,:,21) = []; % bad trial
+    allCond.(StimConditions{cond}).Mean_baseline = mean(allCond.(StimConditions{cond}).rawSegments(:,1:abs(Window.Sample),:),2);
+    allCond.(StimConditions{cond}).Mean_baseline = repmat(allCond.(StimConditions{cond}).Mean_baseline,[1 size(allCond.(StimConditions{cond}).rawSegments,2), 1 ]);
+    allCond.(StimConditions{cond}).unfiltered = allCond.(StimConditions{cond}).rawSegments - allCond.(StimConditions{cond}).Mean_baseline;
+    allCond.(StimConditions{cond}).mean_unfiltered = mean(allCond.(StimConditions{cond}).unfiltered,3);
     
-    fprintf('filtering trial %d \n',trial)
     
-    %     filtered_Horizontal_Checkerboard(:,:,trial) = fliplr(filter(Hd,fliplr(unfiltered_Horizontal_Checkerboard(:,:,trial))')');
-    filtered_Horizontal_Checkerboard(:,:,trial) = filter(Hd,unfiltered_Horizontal_Checkerboard(:,:,trial)')';
+    % BP filter : 1-40Hz
+    allCond.(StimConditions{cond}).filtered = zeros(size(allCond.(StimConditions{cond}).unfiltered),'single');
+    Hd = bp_eeg;
+    for trial = 1 : size(allCond.(StimConditions{cond}).unfiltered,3)
+        
+        fprintf('filtering trial %d \n',trial)
+        
+        %     allCond.(StimConditions{cond}).filtered(:,:,trial) = fliplr(filter(Hd,fliplr(allCond.(StimConditions{cond}).unfiltered(:,:,trial))')');
+        allCond.(StimConditions{cond}).filtered(:,:,trial) = filter(Hd,allCond.(StimConditions{cond}).unfiltered(:,:,trial)')';
+        
+    end
     
-end
-
-
-% Mean
-mean_filtered_lHorizontal_Checkerboard = mean(filtered_Horizontal_Checkerboard,3);
-
-
-%% Vertical
-
-% Load files & add onset time series
-
-Segments_Vertical_Checkerboard = [];
-
-for f = 1 : length(runList)
     
-    % Echo in CommandWindow
-    fprintf('segmentation of %s \n',runList{f,1})
-    
-    [ Segments ] = SegmentCondition( runList{f,1} , 2 , Window.Sample(1) , Window.Sample(2) );
-    Segments_Vertical_Checkerboard = cat( 3 , Segments_Vertical_Checkerboard , Segments);
+    % Mean
+    allCond.(StimConditions{cond}).mean_filtered = mean(allCond.(StimConditions{cond}).filtered,3);
     
 end
-Segments_Vertical_Checkerboard(:,:,21) = [];
-Mean_baseline_Vertical_Checkerboard = mean(Segments_Vertical_Checkerboard(:,1:abs(Window.Sample),:),2);
-Mean_baseline_Vertical_Checkerboard = repmat(Mean_baseline_Vertical_Checkerboard,[1 size(Segments_Vertical_Checkerboard,2), 1 ]);
-unfiltered_Vertical_Checkerboard = Segments_Vertical_Checkerboard - Mean_baseline_Vertical_Checkerboard;
-mean_unfiltered_Vertical_Checkerboard = mean(unfiltered_Vertical_Checkerboard,3);
-
-
-% BP filter : 1-40Hz
-filtered_Vertical_Checkerboard = zeros(size(unfiltered_Vertical_Checkerboard),'single');
-Hd = bp_eeg;
-for trial = 1 : size(unfiltered_Vertical_Checkerboard,3)
-    
-    fprintf('filtering trial %d \n',trial)
-    
-    %     filtered_Vertical_Checkerboard(:,:,trial) = fliplr(filter(Hd,fliplr(unfiltered_Vertical_Checkerboard(:,:,trial))')');
-    filtered_Vertical_Checkerboard(:,:,trial) = filter(Hd,unfiltered_Vertical_Checkerboard(:,:,trial)')';
-    
-end
-
-
-% Mean
-mean_filtered_lVertical_Checkerboard = mean(filtered_Vertical_Checkerboard,3);
-
 
 %% Save
 
-save('benoit2brainstorm',...
-    'Segments_Horizontal_Checkerboard','unfiltered_Horizontal_Checkerboard','mean_unfiltered_Horizontal_Checkerboard','filtered_Horizontal_Checkerboard','filtered_Horizontal_Checkerboard',...
-    'Segments_Vertical_Checkerboard','unfiltered_Vertical_Checkerboard','mean_unfiltered_Vertical_Checkerboard','filtered_Vertical_Checkerboard','filtered_Vertical_Checkerboard')
+% save('benoit2brainstorm',...
+%     'allCond.(StimConditions{cond})','allCond.(StimConditions{cond}).unfiltered','allCond.(StimConditions{cond}).mean_unfiltered.unfiltered','allCond.(StimConditions{cond}).filtered','allCond.(StimConditions{cond}).filtered',...
+%     'allCond.Vertical_Checkerboard','unfiltered_Vertical_Checkerboard','mean_unfiltered_Vertical_Checkerboard','filtered_Vertical_Checkerboard','filtered_Vertical_Checkerboard')
+
+for cond = 1 : length(StimConditions)
+    fieldNames = fieldnames(allCond.(StimConditions{cond}));
+    for signal = 1 : length(fieldNames)
+        
+        v = genvarname([StimConditions{cond} '_' fieldNames{signal}]);
+        eval([v ' = allCond.(StimConditions{cond}).(fieldNames{signal});'])
+        fprintf('saving : %s \n',v)
+        save(v,v)
+        
+    end
+end
+
+fprintf('saving : DONE \n')
 
 
 %%
 
 channel = 20;
-
+StimConditions = {
+    'Horizontal_Checkerboard';
+    'Vertical_Checkerboard';
+    'Right_Audio_Click';
+    'Left_Audio_Click';
+    'Right_Video_Click';
+    'Left_Video_Click';
+    'Audio_Computation';
+    'Video_Computation';
+    'Video_Sentences';
+    'Audio_Sentences';
+    'Cross_Rest';
+    'CLICK_right';
+    'CLICK_left';
+    };
+cond = 5;
 
 if 0
     %%
@@ -145,11 +163,12 @@ if 0
     figure
     
     hold all
-    for p = 1 : size(Segments_Horizontal_Checkerboard,3)
-        plot(Segments_Horizontal_Checkerboard(channel,:,p),'DisplayName',num2str(p))
+    for p = 1 : size(allCond.(StimConditions{cond}).rawSegments,3)
+        plot(allCond.(StimConditions{cond}).rawSegments(channel,:,p),'DisplayName',num2str(p))
     end
     
 end
+
 
 
 if 0
@@ -159,14 +178,14 @@ if 0
     
     subplot(2,1,1)
     hold all
-    for p = 1 : size(Segments_Horizontal_Checkerboard,3)
-        plot(unfiltered_Horizontal_Checkerboard(channel,:,p),'DisplayName',num2str(p))
+    for p = 1 : size(allCond.(StimConditions{cond}).rawSegments,3)
+        plot(allCond.(StimConditions{cond}).unfiltered(channel,:,p),'DisplayName',num2str(p))
     end
     
     subplot(2,1,2)
     hold all
-    for p = 1 : size(Segments_Horizontal_Checkerboard,3)
-        plot(filtered_Horizontal_Checkerboard(channel,:,p),'DisplayName',num2str(p))
+    for p = 1 : size(allCond.(StimConditions{cond}).rawSegments,3)
+        plot(allCond.(StimConditions{cond}).filtered(channel,:,p),'DisplayName',num2str(p))
     end
     
 end
@@ -176,8 +195,8 @@ if 0
     %%
     close all
     
-    plotFFT(mean_unfiltered_Horizontal_Checkerboard(channel,:),1000,[1 80])
-    plotFFT(mean_filtered_Horizontal_Checkerboard(channel,:),1000,[1 80])
+    plotFFT(allCond.(StimConditions{cond}).mean_unfiltered(channel,:),1000,[1 80])
+    plotFFT(allCond.(StimConditions{cond}).mean_filtered(channel,:),1000,[1 80])
     
     
 end
@@ -190,18 +209,18 @@ if 0
     
     figure
     hold all
-    for m = 1 : size(mean_unfiltered_Horizontal_Checkerboard,1)
+    for m = 1 : size(allCond.(StimConditions{cond}).mean_unfiltered,1)
         if m ~= 32 % ECG
-            plot(mean_unfiltered_Horizontal_Checkerboard(m,:),'DisplayName',num2str(p))
+            plot(allCond.(StimConditions{cond}).mean_unfiltered(m,:),'DisplayName',num2str(p))
         end
     end
     
     
     figure
     hold all
-    for m = 1 : size(mean_filtered_lHorizontal_Checkerboard,1)
+    for m = 1 : size(allCond.(StimConditions{cond}).mean_filtered,1)
         if m ~= 32 % ECG
-            plot(mean_filtered_lHorizontal_Checkerboard(m,:),'DisplayName',num2str(p))
+            plot(allCond.(StimConditions{cond}).mean_filtered(m,:),'DisplayName',num2str(p))
         end
     end
     
