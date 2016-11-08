@@ -15,16 +15,16 @@ if ~exist(path_to_binarydata,'dir')
 end
 
 % Fetch the list
-runList = getAllFilesWithExtention(path_to_binarydata, '*.dat', 0);
+runList = regexpdir(path_to_binarydata, '.dat$', 0);
+
+for f = 1 : length(runList)
+    [~, name, ~] = fileparts(runList{f});
+    runList{f} = name;
+end
+
 if isempty(runList)
     error('no .dat file found in %s',path_to_binarydata)
 end
-
-% Take out the extension
-for f = 1 : length(runList)
-    runList{f}(end-3:end) = [];
-end
-
 
 %% Fetch onset list
 
@@ -69,25 +69,63 @@ for f = 1 : length(runList)
             
         end % o for
         
-        
     end % n for
     
-    save(runList{f},'EEGdata','STIMdata','VOLdata','infos','ONSETdata','S')
+    
+    ptbVOL = S.DataStruct.TaskData.KL.KbEvents{1,2};
+    ptbVOL_idx = find(cell2mat(ptbVOL(:,2)));
+    ptbVOL_onset = cell2mat(ptbVOL(ptbVOL_idx,1));
+    ptbVOL_sample = round(ptbVOL_onset*1000) + firstVolume.sample;
+    
+    ptbVOLdata = zeros(size(STIMdata));
+    
+    ptbVOLdata(ptbVOL_sample) = 1;
     
     
-    
+    save(runList{f},'EEGdata','STIMdata','VOLdata','infos','ONSETdata','S','ptbVOLdata')
     
 end
 
 
-figure
-AX(1) = subplot(4,1,1);
-plot(EEGdata(20,:))
-AX(2) = subplot(4,1,2);
-plot(STIMdata)
-AX(3) = subplot(4,1,3);
-plot(VOLdata)
-AX(4) = subplot(4,1,4);
-plot(ONSETdata)
-linkaxes(AX,'x')
+
+if 0
+    
+    time = (1:infos.DataPoints)*infos.SamplingInterval;
+
+    
+    %%
+    
+    close all
+    figure
+    AX(1) = subplot(5,1,1);
+    plot(time,EEGdata(5,:))
+    AX(2) = subplot(5,1,2);
+    plot(time,STIMdata)
+    AX(3) = subplot(5,1,3);
+    plot(time,VOLdata)
+    AX(4) = subplot(5,1,4);
+    plot(time,ptbVOLdata)
+    AX(5) = subplot(5,1,5);
+    plot(time,ONSETdata)
+    linkaxes(AX,'x')
+    
+    
+    %%
+    
+    close all
+    figure
+    hold all
+    plot(time,VOLdata)
+    plot(time,ptbVOLdata*0.99)
+    ScaleAxisLimits
+    
+    
+    %%
+    
+    figure
+    hold all
+    
+    plot(volumeSample_idx(1:end-1)-ptbVOL_sample')
+    
+end
 

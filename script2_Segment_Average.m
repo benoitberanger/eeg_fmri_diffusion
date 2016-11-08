@@ -16,7 +16,7 @@ end
 
 % Fetch the list
 % runList = getAllFilesWithExtention(path_to_matfile, '*.mat', 0);
-runList = regexpdir(path_to_matfile, '^DEV', 0);
+runList = regexpdir(path_to_matfile, 'DEV', 0);
 if isempty(runList)
     error('no file found in %s',path_to_matfile)
 else
@@ -32,19 +32,19 @@ end
 %% List of conditions to segment :
 
 StimConditions = {
-    'Horizontal_Checkerboard';
-    'Vertical_Checkerboard';
-    'Right_Audio_Click';
-    'Left_Audio_Click';
-    'Right_Video_Click';
-    'Left_Video_Click';
-    'Audio_Computation';
-    'Video_Computation';
-    'Video_Sentences';
-    'Audio_Sentences';
-    'Cross_Rest';
-    'CLICK_right';
-    'CLICK_left';
+    'Horizontal_Checkerboard'; % 1
+    'Vertical_Checkerboard';   % 2
+    'Right_Audio_Click';       % 3
+    'Left_Audio_Click';        % 4
+    'Right_Video_Click';       % 5
+    'Left_Video_Click';        % 6
+    'Audio_Computation';       % 7
+    'Video_Computation';       % 8
+    'Video_Sentences';         % 9
+    'Audio_Sentences';         % 10
+    'Cross_Rest';              % 11
+    'CLICK_right';             % 12
+    'CLICK_left';              % 13
     };
 
 % Window.Time = [ -0.100 ; +1.600+0.500 ];
@@ -74,7 +74,7 @@ Window.Sample = Window.Time * SamplingFrequency;
 
 allCond = struct;
 
-for cond = 1 : length(StimConditions)
+for cond = 12:13 %1 : length(StimConditions)
     
     % Echo in CommandWindow
     fprintf('Conditin %s , %d \n',StimConditions{cond},cond)
@@ -86,6 +86,14 @@ for cond = 1 : length(StimConditions)
         % Echo in CommandWindow
         fprintf('segmentation of %s \n',runList{f,1})
         
+        switch StimConditions{cond}
+            case 'CLICK_right'
+                [ rawSegments ] = SegmentConditionCLICK( runList{f,1} , cond , Window.Sample(cond,1) , Window.Sample(cond,2) );
+            case 'CLICK_left'
+                [ rawSegments ] = SegmentConditionCLICK( runList{f,1} , cond , Window.Sample(cond,1) , Window.Sample(cond,2) );
+            otherwise
+                [ rawSegments ] = SegmentCondition( runList{f,1} , cond , Window.Sample(cond,1) , Window.Sample(cond,2) );
+        end
         [ rawSegments ] = SegmentCondition( runList{f,1} , cond , Window.Sample(cond,1) , Window.Sample(cond,2) );
         allCond.(StimConditions{cond}).rawSegments = cat( 3 , allCond.(StimConditions{cond}).rawSegments , rawSegments);
         
