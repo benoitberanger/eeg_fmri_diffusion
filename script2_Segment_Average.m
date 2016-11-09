@@ -9,7 +9,8 @@ clc            % command window
 %% Fetch file list
 
 % Where are the files
-path_to_matfile = pwd;
+upprdir = fileparts(pwd);
+path_to_matfile = [upprdir filesep 'export_processing' filesep];
 if ~exist(path_to_matfile,'dir')
     error('%s is not a valid directory',path_to_matfile)
 end
@@ -74,7 +75,7 @@ Window.Sample = Window.Time * SamplingFrequency;
 
 allCond = struct;
 
-for cond = 12:13 %1 : length(StimConditions)
+for cond = 1 : length(StimConditions)
     
     % Echo in CommandWindow
     fprintf('Conditin %s , %d \n',StimConditions{cond},cond)
@@ -136,17 +137,18 @@ for cond = 1 : length(StimConditions)
         v = genvarname([StimConditions{cond} '_' fieldNames{signal}]);
         eval([v ' = allCond.(StimConditions{cond}).(fieldNames{signal});'])
         fprintf('saving : %s \n',v)
-        save(v,v)
+        save([path_to_matfile v],v)
         
     end
 end
 
+fprintf('\n')
 fprintf('saving : DONE \n')
 
 
 %%
 
-channel = 20;
+channel = 12;
 StimConditions = {
     'Horizontal_Checkerboard';
     'Vertical_Checkerboard';
@@ -162,7 +164,7 @@ StimConditions = {
     'CLICK_right';
     'CLICK_left';
     };
-cond = 5;
+cond = 3;
 
 if 0
     %%
@@ -175,11 +177,7 @@ if 0
         plot(allCond.(StimConditions{cond}).rawSegments(channel,:,p),'DisplayName',num2str(p))
     end
     
-end
-
-
-
-if 0
+    
     %%
     close all
     figure
@@ -196,10 +194,7 @@ if 0
         plot(allCond.(StimConditions{cond}).filtered(channel,:,p),'DisplayName',num2str(p))
     end
     
-end
-
-
-if 0
+    
     %%
     close all
     
@@ -207,10 +202,6 @@ if 0
     plotFFT(allCond.(StimConditions{cond}).mean_filtered(channel,:),1000,[1 80])
     
     
-end
-
-
-if 0
     %%
     
     close all

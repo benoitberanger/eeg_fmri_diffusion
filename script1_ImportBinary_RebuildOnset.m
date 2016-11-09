@@ -5,6 +5,9 @@ clear          % workspace
 fclose('all'); % law-level I/O
 clc            % command window
 
+upperdir = fileparts(pwd);
+path_to_save = [upperdir filesep 'export_processing' filesep];
+
 
 %% Fetch file list
 
@@ -16,15 +19,16 @@ end
 
 % Fetch the list
 runList = regexpdir(path_to_binarydata, '.dat$', 0);
-
+if isempty(runList)
+    error('no .dat file found in %s',path_to_binarydata)
+end
 for f = 1 : length(runList)
     [~, name, ~] = fileparts(runList{f});
     runList{f} = name;
 end
 
-if isempty(runList)
-    error('no .dat file found in %s',path_to_binarydata)
-end
+
+
 
 %% Fetch onset list
 
@@ -35,9 +39,13 @@ if ~exist(path_to_onsets,'dir')
 end
 
 % Fetch the list
-onsetsList = getAllFilesWithExtention(path_to_onsets, '*.mat', 0);
+onsetsList = regexpdir(path_to_onsets, '.mat$', 0);
 if isempty(runList)
-    error('no .dat file found in %s',path_to_onsets)
+    error('no .mat file found in %s',path_to_onsets)
+end
+for o = 1 : length(onsetsList)
+    [~, name, ~] = fileparts(onsetsList{o});
+    onsetsList{o} = name;
 end
 
 
@@ -82,7 +90,7 @@ for f = 1 : length(runList)
     ptbVOLdata(ptbVOL_sample) = 1;
     
     
-    save(runList{f},'EEGdata','STIMdata','VOLdata','infos','ONSETdata','S','ptbVOLdata')
+    save([path_to_save runList{f}],'EEGdata','STIMdata','VOLdata','infos','ONSETdata','S','ptbVOLdata')
     
 end
 
@@ -122,10 +130,26 @@ if 0
     
     %%
     
+    close all
     figure
     hold all
     
-    plot(volumeSample_idx(1:end-1)-ptbVOL_sample')
+    plot(ptbVOL_onset,volumeSample_idx(1:end-1)-ptbVOL_sample')
+    xlabel('time (s)')
+    ylabel('sample difference EEGvsPTB')
+    
+    
+     %%
+    
+    close all
+    figure
+    hold all
+    
+    plot(volumeSample_idx(1:end-1),ptbVOL_sample')
+    xlabel('time (s)')
+    ylabel('sample difference EEGvsPTB')
+    
+    p = polyfit(volumeSample_idx(1:end-1),ptbVOL_sample',1)
     
 end
 
