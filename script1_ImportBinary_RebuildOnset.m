@@ -59,38 +59,9 @@ for f = 1 : length(runList)
     % Import the data
     [ EEGdata , STIMdata , VOLdata, infos ] = ImportBinaryFile( runList{f,1} , path_to_binarydata );
     
-    volumeSample_idx = find(VOLdata);
-    firstVolume.sample = volumeSample_idx(1);
-    firstVolume.timestamp = firstVolume.sample * infos.SamplingInterval;
+    [ ONSETdata , ptbVOLdata , StimStruct ] = RebuildOnsets( [path_to_onsets filesep onsetsList{f,1}] , VOLdata, infos );
     
-    S = load([path_to_onsets filesep onsetsList{f,1}]);
-    ONSETdata = zeros(size(STIMdata));
-    
-    for n = 1 : length(S.names)
-        
-        for o = 1 : length(S.onsets{n})
-            
-            currentOnset = S.onsets{n}(o);
-            currentSample = round( currentOnset / infos.SamplingInterval ) + firstVolume.sample;
-            
-            ONSETdata(currentSample) = n;
-            
-        end % o for
-        
-    end % n for
-    
-    
-    ptbVOL = S.DataStruct.TaskData.KL.KbEvents{1,2};
-    ptbVOL_idx = find(cell2mat(ptbVOL(:,2)));
-    ptbVOL_onset = cell2mat(ptbVOL(ptbVOL_idx,1));
-    ptbVOL_sample = round(ptbVOL_onset*1000) + firstVolume.sample;
-    
-    ptbVOLdata = zeros(size(STIMdata));
-    
-    ptbVOLdata(ptbVOL_sample) = 1;
-    
-    
-    save([path_to_save runList{f}],'EEGdata','STIMdata','VOLdata','infos','ONSETdata','S','ptbVOLdata')
+    save([path_to_save runList{f}],'EEGdata','STIMdata','VOLdata','infos','ONSETdata','StimStruct','ptbVOLdata')
     
 end
 
