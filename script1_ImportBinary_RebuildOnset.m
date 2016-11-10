@@ -89,38 +89,5 @@ if 0
     linkaxes(AX,'x')
     
     
-    %%
-    
-    close all
-    figure
-    hold all
-    plot(time,VOLdata)
-    plot(time,ptbVOLdata*0.99)
-    ScaleAxisLimits
-    
-    
-    %%
-    
-    close all
-    figure
-    hold all
-    
-    plot(ptbVOL_onset,volumeSample_idx(1:end-1)-ptbVOL_sample')
-    xlabel('time (s)')
-    ylabel('sample difference EEGvsPTB')
-    
-    
-     %%
-    
-    close all
-    figure
-    hold all
-    
-    plot(volumeSample_idx(1:end-1),ptbVOL_sample')
-    xlabel('time (s)')
-    ylabel('sample difference EEGvsPTB')
-    
-    p = polyfit(volumeSample_idx(1:end-1),ptbVOL_sample',1)
-    
 end
 
