@@ -28,8 +28,6 @@ for f = 1 : length(runList)
 end
 
 
-
-
 %% Fetch onset list
 
 % Where are the files
@@ -63,31 +61,7 @@ for f = 1 : length(runList)
     
     save([path_to_save runList{f}],'EEGdata','STIMdata','VOLdata','infos','ONSETdata','StimStruct','ptbVOLdata')
     
-end
-
-
-
-if 0
-    
-    time = (1:infos.DataPoints)*infos.SamplingInterval;
-
-    
-    %%
-    
-    close all
-    figure
-    AX(1) = subplot(5,1,1);
-    plot(time,EEGdata(5,:))
-    AX(2) = subplot(5,1,2);
-    plot(time,STIMdata)
-    AX(3) = subplot(5,1,3);
-    plot(time,VOLdata)
-    AX(4) = subplot(5,1,4);
-    plot(time,ptbVOLdata)
-    AX(5) = subplot(5,1,5);
-    plot(time,ONSETdata)
-    linkaxes(AX,'x')
-    
+    plotRun(path_to_save, [ runList{f} '.mat'])
+    drawnow
     
 end
-
