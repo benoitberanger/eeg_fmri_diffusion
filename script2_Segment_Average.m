@@ -61,8 +61,8 @@ Window.Time = [
     -0.100 , +1.400+0.500 ; % Video_Sentences
     -0.100 , +2.200+0.500 ; % Audio_Sentences
     -0.100 , +2.200+0.500 ; % Cross_Rest
-    -0.100 , +0.000+0.500 ; % CLICK_right
-    -0.100 , +0.000+0.500 ; % CLICK_left
+    -1.000 , +1.000+0.000 ; % CLICK_right
+    -1.000 , +1.000+0.000 ; % CLICK_left
     ]; % second
 
 SamplingFrequency = 1000;
@@ -95,7 +95,7 @@ for cond = 1 : length(StimConditions)
             otherwise
                 [ rawSegments ] = SegmentCondition( runList{f,1} , cond , Window.Sample(cond,1) , Window.Sample(cond,2) );
         end
-        [ rawSegments ] = SegmentCondition( runList{f,1} , cond , Window.Sample(cond,1) , Window.Sample(cond,2) );
+        % [ rawSegments ] = SegmentCondition( runList{f,1} , cond , Window.Sample(cond,1) , Window.Sample(cond,2) );
         allCond.(StimConditions{cond}).rawSegments = cat( 3 , allCond.(StimConditions{cond}).rawSegments , rawSegments);
         
     end
@@ -164,7 +164,7 @@ StimConditions = {
     'CLICK_right';
     'CLICK_left';
     };
-cond = 3;
+cond = 12;
 
 if 0
     %%

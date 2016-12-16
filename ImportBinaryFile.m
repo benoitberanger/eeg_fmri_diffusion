@@ -115,8 +115,8 @@ for mrk = 1 : length(tokens)
 end
 
 % In marker lines, fetch the Stimulus
-volPattern = 'S  \d+';
-stimMarkers_idx = regexp(markers(:,3),volPattern);
+stimPattern = 'S  \d+';
+stimMarkers_idx = regexp(markers(:,3),stimPattern);
 stimMarkers_idx = ~cellfun(@isempty, stimMarkers_idx);
 stimMarkers_idx = find(stimMarkers_idx);
 
